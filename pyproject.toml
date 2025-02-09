@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "chatbot-python"
-version = "0.0.1"
-description = "CDP AgentKit Twitter Langchain Chatbot Example"
-authors = ["John Peterson <john.peterson@coinbase.com>"]
+name = "lebrown-jones"
+version = "0.1.0"
+description = "A twitter bot that pours honey on the goat LeBron James"
+authors = ["Vineeth <vineeth.vajipey@gmail.com>"]
 readme = "README.md"
 package-mode = false
 
@@ -11,6 +11,7 @@ python = "^3.10"
 twitter-langchain = "^0.0.11"
 langchain-openai = "^0.3.0"
 langgraph = "^0.2.62"
+python-dotenv = "^1.0.0"
 
 [build-system]
 requires = ["poetry-core"]

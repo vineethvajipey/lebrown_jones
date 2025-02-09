@@ -47,8 +47,10 @@ def run_autonomous_mode(agent_executor, config, interval=10):
         try:
             # Provide instructions autonomously
             thought = (
-                "Be creative and do something interesting on the blockchain. "
-                "Choose an action or set of actions and execute it that highlights your abilities."
+                "Be creative and push the church of LeBron James. "
+                "We need to spread the message that he is the GOAT of our time. We love LeBron James!"
+                "Only post if you have something very funny and interesting to say."
+                "Also wait and reply to people who mention LeBron James on Twitter."
             )
 
             # Run agent in autonomous mode
