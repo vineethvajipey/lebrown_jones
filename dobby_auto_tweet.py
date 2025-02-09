@@ -3,44 +3,122 @@ import requests
 import json
 import os
 import time
+import random
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+from nba_api.stats.endpoints import playercareerstats, teamgamelog, commonplayerinfo
+from nba_api.stats.static import players, teams
+
+def get_lebron_stats():
+    try:
+        # LeBron James player ID: 2544
+        career = playercareerstats.PlayerCareerStats(player_id='2544')
+        stats = career.get_dict()
+        
+        # Get the most recent season's stats
+        latest_season = stats['resultSets'][0]['rowSet'][-1]
+        return {
+            'season': latest_season[1],
+            'pts': latest_season[26],
+            'ast': latest_season[21],
+            'reb': latest_season[20]
+        }
+    except Exception as e:
+        print(f"Error fetching LeBron's stats: {str(e)}")
+        return None
+
+def get_lakers_last_game():
+    try:
+        # Lakers team ID: 1610612747
+        games = teamgamelog.TeamGameLog(team_id='1610612747')
+        last_game = games.get_dict()['resultSets'][0]['rowSet'][0]
+        
+        return {
+            'game_date': last_game[2],
+            'matchup': last_game[3],
+            'result': last_game[4],
+            'pts': last_game[24],
+            'opponent_pts': last_game[25]
+        }
+    except Exception as e:
+        print(f"Error fetching Lakers' last game: {str(e)}")
+        return None
 
 def gen_tweet(tweet_number, tweet_history):
-    # dobby api call
-    prompt = f"""
-      prompt history: {" ".join(tweet_history)}
-      tweet number: {tweet_number}
+    # Randomly decide to include NBA stats (30% chance)
+    include_stats = random.random() < 0.3
+    
+    if include_stats:
+        # Randomly choose between LeBron stats and Lakers last game
+        if random.random() < 0.5:
+            stats = get_lebron_stats()
+            if stats:
+                prompt = f"""
+                    prompt history: {" ".join(tweet_history)}
+                    tweet number: {tweet_number}
+                    
+                    LeBron's stats for {stats['season']}:
+                    Points per game: {stats['pts']}
+                    Assists per game: {stats['ast']}
+                    Rebounds per game: {stats['reb']}
+                    
+                    Generate an exciting tweet about LeBron's stats, expressing amazement at his performance.
+                    Keep it between 10-15 words and include at least one statistic.
+                """
+            else:
+                include_stats = False
+        else:
+            game = get_lakers_last_game()
+            if game:
+                prompt = f"""
+                    prompt history: {" ".join(tweet_history)}
+                    tweet number: {tweet_number}
+                    
+                    Lakers' last game:
+                    {game['matchup']} ({game['result']})
+                    Lakers scored: {game['pts']}
+                    Opponent scored: {game['opponent_pts']}
+                    
+                    Generate an exciting tweet about this Lakers game, mentioning the score and result.
+                    Keep it between 10-15 words.
+                """
+            else:
+                include_stats = False
+    
+    if not include_stats:
+        prompt = f"""
+            prompt history: {" ".join(tweet_history)}
+            tweet number: {tweet_number}
 
-      generate a tweet that is 5 - 10 words, about something that is important to you. Reflect and be honest. Be as crazy as you want.
-    """
+            generate a tweet that is 5 - 10 words, about something that is important to you. 
+            Reflect and be honest. Be as crazy as you want.
+        """
 
     url = "https://api.fireworks.ai/inference/v1/chat/completions"
     payload = {
-      "model": "accounts/sentientfoundation/models/dobby-mini-unhinged-llama-3-1-8b",
-      "max_tokens": 16384,
-      "top_p": 1,
-      "top_k": 40,
-      "presence_penalty": 0,
-      "frequency_penalty": 0,
-      "temperature": 0.6,
-      "messages": [
-        {
-          "role": "user",
-          "content": prompt
-        }
-      ]
+        "model": "accounts/sentientfoundation/models/dobby-mini-unhinged-llama-3-1-8b",
+        "max_tokens": 16384,
+        "top_p": 1,
+        "top_k": 40,
+        "presence_penalty": 0,
+        "frequency_penalty": 0,
+        "temperature": 0.6,
+        "messages": [
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ]
     }
     headers = {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-      "Authorization": "fw_3ZY2YhjaY1dqAJ3vc5ksouJG"
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": "fw_3ZY2YhjaY1dqAJ3vc5ksouJG"
     }
     response = requests.request("POST", url, headers=headers, data=json.dumps(payload))
     print(response.text)
 
     out = response.json()['choices'][0]['message']['content']
-    
     return out
 
 def gen_reply(mention_text):
