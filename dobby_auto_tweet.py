@@ -97,6 +97,13 @@ def check_and_respond_to_mentions(client, last_checked_time):
         # Process each mention
         for mention in mentions.data:
             try:
+                # Like the mention
+                try:
+                    client.like(mention.id)
+                    print(f"Liked tweet: {mention.id}")
+                except Exception as e:
+                    print(f"Error liking tweet {mention.id}: {str(e)}")
+
                 # Generate and post reply
                 reply_text = gen_reply(mention.text)
                 client.create_tweet(
